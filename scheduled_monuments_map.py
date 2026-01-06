@@ -64,7 +64,7 @@ df["Period"] = pd.Categorical(
 )
 
 # 2. create a map figure
-fig = px.scatter_mapbox(
+fig = px.scatter_geo(
     df,
     lon="lon",
     lat="lat",
@@ -72,26 +72,48 @@ fig = px.scatter_mapbox(
     hover_data=["SAMNumber", "SiteType", "Period"],
     animation_frame="Period",
     category_orders={"Period": period_order},
-    zoom=7,
-    center={"lat": 52.5, "lon": -3.8},
 )
 
 # Marker styling (size + outline)
 fig.update_traces(
-    marker=dict(size=6, opacity=0.85),
+    marker=dict(size=6, opacity=0.85, line=dict(width=0.5, color="white")),
     hovertemplate="<b>%{hovertext}</b><br>"
               "SAMNumber: %{customdata[0]}<br>"
               "SiteType: %{customdata[1]}<br>"
               "Period: %{customdata[2]}<extra></extra>"
 )
 
-# Basemap + Layout
+# Page/layout sizing
 fig.update_layout(
-    mapbox_style="carto-positron",  # good default, no token needed
-    width=900,
-    height=900,
-    margin=dict(l=20, r=20, t=60, b=20),
-    title=dict(text="Scheduled monuments in Wales by period", x=0.5, xanchor="center"),
+    width=1000,
+    height=700,
+    margin=dict(l=20, r=20, t=70, b=20),
+    title=dict(
+        text="Scheduled monuments in Wales by period",
+        x=0.5,
+        xanchor="center"
+    )
+)
+
+# 3. zoom the map to the data (Wales)
+fig.update_geos(
+    projection_type="mercator",
+    visible=False,
+    resolution=50,
+    lonaxis=dict(range=[-6.0, -2.5]),
+    lataxis=dict(range=[51.2, 53.6]),
+
+    showland=True,
+    landcolor="rgb(220, 220, 220)",
+
+    showocean=True,
+    oceancolor="rgb(200, 215, 230)",
+
+    showcoastlines=False,
+    coastlinecolor="rgb(110, 110, 110)",
+    coastlinewidth=0.6,
+
+    showcountries=False,
 )
 
 fig.update_layout(
