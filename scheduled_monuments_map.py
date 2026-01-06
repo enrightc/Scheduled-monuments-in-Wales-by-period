@@ -98,8 +98,9 @@ fig.update_layout(
 # 3. zoom the map to the data (Wales)
 fig.update_geos(
     projection_type="mercator",
-    fitbounds="locations",
     visible=False,
+    lonaxis=dict(range=[-6.0, -2.5]),
+    lataxis=dict(range=[51.2, 53.6]),
 
     # Basemap-style options
     showland=True,
@@ -114,6 +115,42 @@ fig.update_geos(
     countrywidth=0.6,
 )
 
+fig.update_layout(
+    updatemenus=[
+        dict(
+            type="buttons",
+            showactive=False,
+            buttons=[
+                dict(
+                    label="Play",
+                    method="animate",
+                    args=[
+                        None,
+                        {
+                            "frame": {"duration": 900, "redraw": True},      # how long each period stays on screen
+                            "transition": {"duration": 700, "easing": "cubic-in-out"},  # the smooth fade/move between periods
+                            "fromcurrent": True,
+                            "mode": "immediate",
+                        },
+                    ],
+                ),
+                dict(
+                    label="Pause",
+                    method="animate",
+                    args=[
+                        [None],
+                        {
+                            "frame": {"duration": 0, "redraw": True},
+                            "transition": {"duration": 0},
+                            "mode": "immediate",
+                        },
+                    ],
+                ),
+            ],
+        )
+    ]
+)
+
 # 4. show the map
 fig.show() # Opens a new browser with interactive map.
 
@@ -121,3 +158,5 @@ fig.show() # Opens a new browser with interactive map.
 # print(df["Period"].unique())
 
 # print(df["SiteType"].unique())
+
+fig.write_html("index.html")
