@@ -64,7 +64,7 @@ df["Period"] = pd.Categorical(
 )
 
 # 2. create a map figure
-fig = px.scatter_geo(
+fig = px.scatter_mapbox(
     df,
     lon="lon",
     lat="lat",
@@ -72,47 +72,26 @@ fig = px.scatter_geo(
     hover_data=["SAMNumber", "SiteType", "Period"],
     animation_frame="Period",
     category_orders={"Period": period_order},
+    zoom=7,
+    center={"lat": 52.5, "lon": -3.8},
 )
 
 # Marker styling (size + outline)
 fig.update_traces(
-    marker=dict(size=6, opacity=0.85, line=dict(width=0.5, color="white")),
+    marker=dict(size=6, opacity=0.85),
     hovertemplate="<b>%{hovertext}</b><br>"
               "SAMNumber: %{customdata[0]}<br>"
               "SiteType: %{customdata[1]}<br>"
               "Period: %{customdata[2]}<extra></extra>"
 )
 
-# Page/layout sizing
+# Basemap + Layout
 fig.update_layout(
-    width=1000,
-    height=700,
-    margin=dict(l=20, r=20, t=70, b=20),
-    title=dict(
-        text="Scheduled monuments in Wales by period",
-        x=0.5,
-        xanchor="center"
-    )
-)
-
-# 3. zoom the map to the data (Wales)
-fig.update_geos(
-    projection_type="mercator",
-    visible=False,
-    lonaxis=dict(range=[-6.0, -2.5]),
-    lataxis=dict(range=[51.2, 53.6]),
-
-    # Basemap-style options
-    showland=True,
-    landcolor="rgb(245, 245, 245)",
-    showocean=True,
-    oceancolor="rgb(235, 242, 250)",
-    showcoastlines=True,
-    coastlinecolor="rgb(120, 120, 120)",
-    coastlinewidth=0.6,
-    showcountries=True,
-    countrycolor="rgb(160, 160, 160)",
-    countrywidth=0.6,
+    mapbox_style="carto-positron",  # good default, no token needed
+    width=900,
+    height=900,
+    margin=dict(l=20, r=20, t=60, b=20),
+    title=dict(text="Scheduled monuments in Wales by period", x=0.5, xanchor="center"),
 )
 
 fig.update_layout(
@@ -127,8 +106,8 @@ fig.update_layout(
                     args=[
                         None,
                         {
-                            "frame": {"duration": 900, "redraw": True},      # how long each period stays on screen
-                            "transition": {"duration": 700, "easing": "cubic-in-out"},  # the smooth fade/move between periods
+                            "frame": {"duration": 700, "redraw": True},      # how long each period stays on screen
+                            "transition": {"duration": 500, "easing": "cubic-in-out"},  # the smooth fade/move between periods
                             "fromcurrent": True,
                             "mode": "immediate",
                         },
