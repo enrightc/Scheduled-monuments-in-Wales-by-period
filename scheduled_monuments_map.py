@@ -87,12 +87,36 @@ fig.update_traces(
 fig.update_layout(
     width=1000,
     height=700,
-    margin=dict(l=20, r=20, t=70, b=20),
+    margin=dict(l=20, r=20, t=70, b=200),
     title=dict(
-        text="Scheduled monuments in Wales by period",
+        text=(
+            "Scheduled monuments in Wales by period<br>"
+            "<span style='font-size:14px;color:#555;'>"
+            "Each frame shows the spatial distribution of scheduled monuments recorded for that period"
+            "</span>"
+        ),
         x=0.5,
         xanchor="center"
-    )
+    ),
+    annotations=[
+        dict(
+            text=(
+                "Designated Historic Asset GIS Data, The Welsh Historic Environment Service (Cadw), "
+                "DATE [enter the date you received the data], licensed under the Open Government Licence v3.0.<br>"
+                "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+            ),
+            x=0.5,
+            y=-0.35,
+            xref="paper",
+            yref="paper",
+            xanchor="center",
+            yanchor="top",
+            showarrow=False,
+            font=dict(size=10, color="#555"),
+            align="center",
+        )
+    ],
+    
 )
 
 # 3. zoom the map to the data (Wales)
