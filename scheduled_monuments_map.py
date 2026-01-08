@@ -1,17 +1,18 @@
+# Import libraries 
 import pandas as pd
 import plotly.express as px
 
-# 1. load the data
-# df = dataframe
+## 1. load the data
 df = pd.read_csv("scheduled_monuments_wales_centroids_cleaned.csv")
+# pd = pandas (nickname given at library import)
+# df = dataframe
+# pd.read_csv(...) tells pandas to open a CSV file and read its contents.
+# df = ... stores the results in a pandsa DataFrame called df
 
-print("All unique Period values in CSV:")
-print(sorted(df["Period"].dropna().unique()))
+## Step 1b: Prepare the Period field for animation/sorting
 
-print("Sites per period:")
-print(df["Period"].value_counts())
-
-# Explicitly define chronological order of periods
+# Explicitly define the chronological order of periods
+# This list will be used to force correct time ordering (not alphabetical)
 period_order = [
     "Prehistoric",
     "Neolithic",
@@ -26,100 +27,54 @@ period_order = [
     "Modern"
 ]
 
-# Remove rows where the Period is "Unknown"
-
-# df["Period"]
-# → selects the 'Period' column from the dataframe
-
-# df["Period"] != "Unknown"
-# → checks each row and returns True if the period is NOT "Unknown"
-# → results in a series of True / False values (one per row)
-
-# df[ ... ]
-# → keeps only the rows where the condition is True
-# → rows where the condition is False ("Unknown") are dropped
+# Remove records where the Period value is "Unknown" (So they do not appear in the map animation)
+# This filters the dataframe to keep only rows with a known period
 df = df[df["Period"] != "Unknown"]
+# Create a new version of df that only keeps rows where the Period column is not equal to 'Unknown'
+# [df["Period"] = Look at period column in the table.
+# != "Unknown"
+#   → check each row and ask: is this value NOT “Unknown”?
+#   → this produces a True / False result for every row
+# df[ ... ]
+#   → keep only the rows where the result is True
+# df =
+#   → overwrite the original dataframe with this filtered version
 
-# Apply chronological ordering to the Period column
-# This prevents Plotly (and pandas) from sorting periods alphabetically
-
-# pd.Categorical(...)
-# → tells pandas to treat this column as a set of defined categories,
-#   rather than free text strings
-
-# df["Period"]
-# → uses the existing values in the Period column as the input data
-
-# categories=period_order
-# → defines the ONLY allowed period values
-# → also defines the order they should follow (earliest → latest)
-
-# ordered=True
-# → tells pandas that the order of these categories matters
-# → allows correct chronological sorting instead of alphabetical sorting
+# Convert the Period column into an ordered categorical type
+# This tells pandas (and Plotly) that:
+# - Period values come from a fixed list (period_order)
+# - The order of that list is meaningful (chronological)
+# Without this, periods would be sorted alphabetically
 df["Period"] = pd.Categorical(
     df["Period"],
     categories=period_order,
     ordered=True
 )
 
-# 2. create a map figure
+## Step 2. Create the map figure
 fig = px.scatter_geo(
-    df,
-    lon="lon",
-    lat="lat",
-    hover_name="Name",
-    hover_data=["SAMNumber", "SiteType", "Period"],
-    animation_frame="Period",
-    category_orders={"Period": period_order},
+    df,                             # The DataFrame (table) that contains all the data
+    lon="lon",                      # Column in df that stores longitude values
+    lat="lat",                      # Column in df that stores latitude values
+    hover_name="Name",              # Column used as the main title in the hover popup
+    hover_data=["SAMNumber", "SiteType", "Period"],  
+                                    # Extra columns to show when hovering over a point
+    animation_frame="Period",       # Creates one trace per animation frame per Period value
+    category_orders={"Period": period_order},  
+                                    # Forces the animation to follow a specific order
 )
+# px.scatter_geo(...) builds a Plotly "geo" map using Plotly’s default basemap
+# fig is the resulting figure object (the map), stored in memory
+# At this stage:
+# - the data has been turned into a visual
+# - nothing is displayed or saved yet
+# - styling and layout tweaks happen in later steps
 
-# Marker styling (size + outline)
-fig.update_traces(
-    marker=dict(size=6, opacity=0.85, line=dict(width=0.5, color="white")),
-    hovertemplate="<b>%{hovertext}</b><br>"
-              "SAMNumber: %{customdata[0]}<br>"
-              "SiteType: %{customdata[1]}<br>"
-              "Period: %{customdata[2]}<extra></extra>"
-)
-
-# Page/layout sizing
-fig.update_layout(
-    width=1000,
-    height=700,
-    margin=dict(l=20, r=20, t=70, b=200),
-    title=dict(
-        text=(
-            "Scheduled monuments in Wales by period<br>"
-            "<span style='font-size:14px;color:#555;'>"
-            "Each frame shows the spatial distribution of scheduled monuments recorded for that period"
-            "</span>"
-        ),
-        x=0.5,
-        xanchor="center"
-    ),
-    annotations=[
-        dict(
-            text=(
-                "Designated Historic Asset GIS Data, The Welsh Historic Environment Service (Cadw), "
-                "DATE [enter the date you received the data], licensed under the Open Government Licence v3.0.<br>"
-                "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
-            ),
-            x=0.5,
-            y=-0.35,
-            xref="paper",
-            yref="paper",
-            xanchor="center",
-            yanchor="top",
-            showarrow=False,
-            font=dict(size=10, color="#555"),
-            align="center",
-        )
-    ],
-    
-)
-
-# 3. zoom the map to the data (Wales)
+## Step 3: Configure the geographic basemap / projection / extent
+# Update the geographic system of the figure.
+# This is specfic to scatter_geo
+# it controls map projection, what part of world is visible, land / ocean colouring, coastline and country borders.
+# It does not affect marker symbology, hover content, animation frames these are handled by update_traces
 fig.update_geos(
     projection_type="mercator",
     visible=False,
@@ -140,7 +95,73 @@ fig.update_geos(
     showcountries=False,
 )
 
+# Step 4: marker styling and hover behaviour
+# Marker styling and hover box content
+# trace = one set of plotted figures inside the fig (whole map).
+# Apply these settings to every trace in the figure.
+fig.update_traces(
+    marker=dict(                    # marker symbology
+        size=6,                     # Size of each point on the map
+        opacity=0.85,               # Slight transparency so overlapping points are visible
+        line=dict(
+            width=0.5,              # Thickness of the marker outline
+            color="white"           # Colour of the marker outline
+        )
+    ),
+
+    # Custom hover text layout (overrides Plotly's default hover formatting)
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"   # Bold title from hover_name (e.g. site name)
+        "SAMNumber: %{customdata[0]}<br>"  # First item from hover_data list
+        "SiteType: %{customdata[1]}<br>"   # Second item from hover_data list
+        "Period: %{customdata[2]}"          # Third item from hover_data list
+        "<extra></extra>"           # Removes the default trace name from the hover box
+    )
+)
+# update_traces(...) applies these settings to all markers in the figure
+# hovertext comes from hover_name="Name" in px.scatter_geo(...)
+# customdata[] comes from the order of items in hover_data=[...]
+
+# Step 5: Page layout
 fig.update_layout(
+    # Page/layout sizing
+    width=1000,
+    height=700,
+    margin=dict(l=20, r=20, t=70, b=200),
+
+    # Title
+    title=dict(
+        text=(
+            "Scheduled monuments in Wales by period<br>"
+            "<span style='font-size:14px;color:#555;'>"
+            "Each frame shows the spatial distribution of scheduled monuments recorded for that period"
+            "</span>"
+        ),
+        x=0.5,
+        xanchor="center"
+    ),
+
+    # Footnote / attribution
+    annotations=[
+        dict(
+            text=(
+                "Designated Historic Asset GIS Data, The Welsh Historic Environment Service (Cadw), "
+                "DATE [enter the date you received the data], licensed under the Open Government Licence v3.0.<br>"
+                "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+            ),
+            x=0.5,
+            y=-0.4,
+            xref="paper",
+            yref="paper",
+            xanchor="center",
+            yanchor="top",
+            showarrow=False,
+            font=dict(size=10, color="#555"),
+            align="center",
+        )
+    ],
+
+    # Play / pause controls for the animation
     updatemenus=[
         dict(
             type="buttons",
@@ -152,8 +173,8 @@ fig.update_layout(
                     args=[
                         None,
                         {
-                            "frame": {"duration": 700, "redraw": True},      # how long each period stays on screen
-                            "transition": {"duration": 500, "easing": "cubic-in-out"},  # the smooth fade/move between periods
+                            "frame": {"duration": 800, "redraw": True},  # how long each period stays on screen
+                            "transition": {"duration": 500, "easing": "cubic-in-out"},  # smooth fade/move between periods
                             "fromcurrent": True,
                             "mode": "immediate",
                         },
@@ -173,15 +194,19 @@ fig.update_layout(
                 ),
             ],
         )
-    ]
+    ],
 )
 
-# 4. show the map
-fig.show() # Opens a new browser with interactive map.
+## Step 6: (For develpment) show the map
+fig.show()
+# opens a temporary, auto-generated preview of the figure.
+
+## step 7: Save to HTML (For Deployment)
+fig.write_html("index.html")
+# Exports the interactive Plotly map as a standalone HTML file
 
 # Display unique period values
 # print(df["Period"].unique())
 
 # print(df["SiteType"].unique())
 
-fig.write_html("index.html")
