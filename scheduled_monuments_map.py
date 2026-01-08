@@ -56,12 +56,15 @@ fig = px.scatter_geo(
     df,                             # The DataFrame (table) that contains all the data
     lon="lon",                      # Column in df that stores longitude values
     lat="lat",                      # Column in df that stores latitude values
+    # color="SiteType",             # Colour markers by SiteType (one colour per site type)
+                                    # Plotly creates a categorical colour legend automatically
     hover_name="Name",              # Column used as the main title in the hover popup
     hover_data=["SAMNumber", "SiteType", "Period"],  
                                     # Extra columns to show when hovering over a point
     animation_frame="Period",       # Creates one trace per animation frame per Period value
     category_orders={"Period": period_order},  
                                     # Forces the animation to follow a specific order
+    
 )
 # px.scatter_geo(...) builds a Plotly "geo" map using Plotly’s default basemap
 # fig is the resulting figure object (the map), stored in memory
@@ -204,9 +207,4 @@ fig.show()
 ## step 7: Save to HTML (For Deployment)
 fig.write_html("index.html")
 # Exports the interactive Plotly map as a standalone HTML file
-
-# Display unique period values
-# print(df["Period"].unique())
-
-# print(df["SiteType"].unique())
 
