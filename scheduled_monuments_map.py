@@ -52,7 +52,7 @@ df["Period"] = pd.Categorical(
 )
 
 ## Step 2. Create the map figure
-fig = px.scatter_geo(
+fig = px.scatter_map(
     df,                             # The DataFrame (table) that contains all the data
     lon="lon",                      # Column in df that stores longitude values
     lat="lat",                      # Column in df that stores latitude values
@@ -64,6 +64,8 @@ fig = px.scatter_geo(
     animation_frame="Period",       # Creates one trace per animation frame per Period value
     category_orders={"Period": period_order},  
                                     # Forces the animation to follow a specific order
+    zoom=6.4,                       # Required for scatter_map
+    center={"lat": 52.5, "lon": -3.8},  # Required for scatter_map
     
 )
 # px.scatter_geo(...) builds a Plotly "geo" map using Plotly’s default basemap
@@ -73,43 +75,16 @@ fig = px.scatter_geo(
 # - nothing is displayed or saved yet
 # - styling and layout tweaks happen in later steps
 
-## Step 3: Configure the geographic basemap / projection / extent
-# Update the geographic system of the figure.
-# This is specfic to scatter_geo
-# it controls map projection, what part of world is visible, land / ocean colouring, coastline and country borders.
-# It does not affect marker symbology, hover content, animation frames these are handled by update_traces
-fig.update_geos(
-    projection_type="mercator",
-    visible=False,
-    resolution=50,
-    lonaxis=dict(range=[-6.0, -2.5]),
-    lataxis=dict(range=[51.2, 53.6]),
 
-    showland=True,
-    landcolor="rgb(220, 220, 220)",
 
-    showocean=True,
-    oceancolor="rgb(200, 215, 230)",
-
-    showcoastlines=False,
-    coastlinecolor="rgb(110, 110, 110)",
-    coastlinewidth=0.6,
-
-    showcountries=False,
-)
-
-# Step 4: marker styling and hover behaviour
+# Step 3: marker styling and hover behaviour
 # Marker styling and hover box content
 # trace = one set of plotted figures inside the fig (whole map).
 # Apply these settings to every trace in the figure.
 fig.update_traces(
     marker=dict(                    # marker symbology
         size=6,                     # Size of each point on the map
-        opacity=0.85,               # Slight transparency so overlapping points are visible
-        line=dict(
-            width=0.5,              # Thickness of the marker outline
-            color="white"           # Colour of the marker outline
-        )
+        opacity=0.85,               # Slight transparency so overlapping points are visibl
     ),
 
     # Custom hover text layout (overrides Plotly's default hover formatting)
@@ -124,6 +99,19 @@ fig.update_traces(
 # update_traces(...) applies these settings to all markers in the figure
 # hovertext comes from hover_name="Name" in px.scatter_geo(...)
 # customdata[] comes from the order of items in hover_data=[...]
+
+## Step 4: Choose a basemap
+# Take the figure already built (step 2) and change how it looks and behaves. 
+fig.update_layout(
+    map_style="carto-positron",
+    map=dict(
+        pitch=45,     # tilt (0–60 is sensible)
+        bearing=0     # rotation
+    ),
+    width=1000,
+    height=700,
+    margin=dict(l=20, r=20, t=70, b=160),
+)
 
 # Step 5: Page layout
 fig.update_layout(
